@@ -1,15 +1,14 @@
 from django.db import models
 
 
-class Board(models.Model):
-    board_id = models.AutoField(primary_key=True)
-    creation_date = models.DateField()
-    board_title = models.CharField(max_length=50)
+class User(models.Model):
+	user_id = models.AutoField(primary_key=True)
+	user_name = models.CharField(max_length=150, unique=True, )
+	password = models.CharField(max_length=150, )
+	role = models.CharField(max_length=10, )
 
 
-class Task(models.Model):
-    board_id = models.ForeignKey(Board, on_delete=models.CASCADE, verbose_name="board_id_of_task")
-    task_description = models.TextField()
-    task_creation_date = models.DateTimeField()
-    task_status = models.CharField(max_length=50)
-    task_deadline = models.DateField
+class UserAndBoard(models.Model):
+	user_and_board_id = models.AutoField(primary_key=True)
+	user_name = models.ForeignKey(User, on_delete=models.CASCADE)
+	board_title = models.ForeignKey('boardsApp.Board', on_delete=models.CASCADE)
