@@ -3,7 +3,7 @@ from django.db import models
 
 class Board(models.Model):
     board_id = models.AutoField(primary_key=True)
-    creation_date = models.DateField()
+    board_creation_date = models.DateField()
     board_title = models.CharField(max_length=50, )
 
 
