@@ -1,14 +1,8 @@
-from rest_framework import mixins, permissions
-from rest_framework.viewsets import GenericViewSet
+from rest_framework import viewsets
 from .models import User
 from .serializers import UserSerializer
 
 
-class UserViewSet(mixins.ListModelMixin,
-                  mixins.CreateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  GenericViewSet):
-    queryset = User.objects.all()
+class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    permission_classes = permissions.IsAuthenticated
-
+    queryset = User.objects.all()

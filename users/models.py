@@ -3,9 +3,9 @@ from django.db import models
 
 class User(models.Model):
     user_id = models.AutoField(primary_key=True)
-    user_name = models.CharField(max_length=50, unique=True, )
-    user_password = models.CharField(max_length=50, )
-    user_role = models.CharField(max_length=15, )
+    user_name = models.CharField(max_length=50, unique=True)
+    user_password = models.CharField(max_length=50)
+    user_role = models.CharField(max_length=15)
 
 
 class UserAndBoard(models.Model):
