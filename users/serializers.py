@@ -11,4 +11,4 @@ class UserSerializer(serializers.ModelSerializer):
 class UserAndBoardSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAndBoard
-        fields = ('user_and_board_id', 'user_name', 'board_title')
+        fields = ('user_name', 'board_title')
