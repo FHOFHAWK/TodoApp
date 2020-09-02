@@ -24,4 +24,4 @@ class BoardSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ('task_description', 'task_creation_date', 'task_status', 'task_deadline')
+        fields = ('board_title', 'task_description', 'task_creation_date', 'task_status', 'task_deadline')

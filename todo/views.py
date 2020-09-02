@@ -1,6 +1,5 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import User, UserAndBoard
 from .serializers import UserSerializer, UserAndBoardSerializer
 from .models import Board, Task
@@ -16,16 +15,16 @@ class UserViewSet(viewsets.ModelViewSet):
 class UserAndBoardViewSet(viewsets.ModelViewSet):
     serializer_class = UserAndBoardSerializer
     queryset = UserAndBoard.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
 
 class BoardViewSet(viewsets.ModelViewSet):
     serializer_class = BoardSerializer
     queryset = Board.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
