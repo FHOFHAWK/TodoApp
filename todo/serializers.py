@@ -1,27 +1,33 @@
 from rest_framework import serializers
-from .models import User, UserAndBoard
+from .models import User, UserAndTask
 from .models import Board, Task
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
+        fields = ('id', 'user_name', 'user_role')
+
+
+class DetailUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
         fields = ('user_name', 'user_role')
 
 
-class UserAndBoardSerializer(serializers.ModelSerializer):
+class UserAndTaskSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UserAndBoard
-        fields = ('user_name', 'board_title')
+        model = UserAndTask
+        fields = ('user_name', 'task_id')
 
 
 class BoardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
-        fields = ('board_creation_date', 'board_title')
+        fields = '__all__'
 
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ('board_title', 'task_description', 'task_creation_date', 'task_status', 'task_deadline')
+        fields = '__all__'
