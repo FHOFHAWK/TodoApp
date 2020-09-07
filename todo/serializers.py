@@ -1,33 +1,51 @@
 from rest_framework import serializers
-from .models import User, UserAndTask
-from .models import Board, Task
+
+from .models import User, Board, BoardsAndUsers, Column, BoardAndColumn, Task
 
 
-class UserSerializer(serializers.ModelSerializer):
+class AllUsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'user_name', 'user_role')
+        fields = ('id', 'username', 'is_superuser')
 
 
-class DetailUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('user_name', 'user_role')
-
-
-class UserAndTaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserAndTask
-        fields = ('user_name', 'task_id')
-
-
-class BoardSerializer(serializers.ModelSerializer):
+class AllBoardsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = '__all__'
 
 
-class TaskSerializer(serializers.ModelSerializer):
+class AllBoardsAndUsersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BoardsAndUsers
+        fields = '__all__'
+
+
+class AllColumnsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Column
+        fields = '__all__'
+
+
+class AllBoardsAndColumnsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BoardAndColumn
+        fields = '__all__'
+
+
+class AllTasksSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = ('id', 'user_name', 'board_title', 'column_title', 'task_description', 'deadline_date')
+
+
+class RetrieveTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ('id', 'task_description', 'column_title', 'deadline_date',)
+
+
+class UpdateTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ('id', 'task_description', 'column_title')

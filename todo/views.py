@@ -1,113 +1,129 @@
-from rest_framework import viewsets
-from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 
-from .models import User, UserAndTask
-from .serializers import UserSerializer, UserAndTaskSerializer, DetailUserSerializer
-from .models import Board, Task
-from .serializers import BoardSerializer, TaskSerializer
+from rest_framework import viewsets, status
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView, UpdateAPIView
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import User, Board, BoardsAndUsers, Column, BoardAndColumn, Task
+from .serializers import AllUsersSerializer, AllBoardsSerializer, AllBoardsAndUsersSerializer, AllColumnsSerializer, \
+    AllBoardsAndColumnsSerializer, AllTasksSerializer, RetrieveTaskSerializer, UpdateTaskSerializer
+from .services import check_input_data
 
 
-# TODO: Обычный пользователь должен уметь просматривать все свои таски и менять их статус.
-#  Для этого нужен реализовать отдельный url и view
-
-class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
+class AllUsersViewSet(viewsets.ModelViewSet):
+    """
+    Вывод списка всех пользователей + функционал ModelViewSet
+    """
     queryset = User.objects.all()
-    permission_classes = [IsAuthenticated]
+    serializer_class = AllUsersSerializer
+    permission_classes = [IsAdminUser]
 
 
-class TestAPIView(APIView):
-    serializer_class = UserSerializer
-
-    def get_queryset(self):
-        users = User.objects.all()
-        return users
-
-    def get(self, request, *args, **kwargs):
-        users = self.get_queryset()
-        serializer = DetailUserSerializer(users, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, *args, **kwargs):
-        user_data = self.request.data
-
-        if len(user_data["user_password"]) > 8:
-            new_user = User.objects.create(
-                user_name=user_data["user_name"],
-                user_password=user_data["user_password"],
-                user_role=user_data["user_role"])
-            new_user.save()
-            serializer = DetailUserSerializer(new_user)
-            return Response(serializer.data)
-        else:
-            return Response('small pass')
-
-
-# @login_required
-@api_view(['GET'])
-def users_list(request):
-    if request.method == 'GET' and str(request.user) == 'admin':
-        queryset = User.objects.all()
-        serializer_class = UserSerializer(queryset, many=True)
-        return Response({'message': 'aaaa'})
-    # elif request.method == "POST":
-    #     data = JSONParser().parse(request)
-    #     serializer = ProductSerializer(data=data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response({"data": serializer.data, "status": status.HTTP_201_CREATED})
-    #     return Response({"data": serializer.data, "status": status.HTTP_400_BAD_REQUEST})
-
-
-class UserAndTaskViewSet(viewsets.ModelViewSet):
-    serializer_class = UserAndTaskSerializer
-    queryset = UserAndTask.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class BoardViewSet(viewsets.ModelViewSet):
-    serializer_class = BoardSerializer
+class AllBoardsViewSet(viewsets.ModelViewSet):
+    """
+    Вывод списка всех досок + функционал ModelViewSet
+    """
     queryset = Board.objects.all()
-    permission_classes = [IsAuthenticated]
+    serializer_class = AllBoardsSerializer
+    permission_classes = [IsAdminUser]
 
 
-# TODO: сделать вывод всех задач доступным только для админа и модератора
-# TODO: сделать редирект после POST на ту же страницу для нового вывода всего списка чего-либо
-class AllTasksViewSet(viewsets.ModelViewSet):
+class AllBoardsAndUsersViewSet(viewsets.ModelViewSet):
     """
-    Вьюха позволяет админу или модеру просматривать, добавлять, удалять, обновлять все таски.
+    Вывод списка всех досок с пользователями + функционал ModelViewSet
     """
-    permission_classes = [IsAuthenticated]
-    serializer_class = TaskSerializer
+    queryset = BoardsAndUsers.objects.all()
+    serializer_class = AllBoardsAndUsersSerializer
+    permission_classes = [IsAdminUser]
 
-    def get_queryset(self):
-        tasks = Task.objects.all()
-        return tasks
+
+class AllColumnsViewSet(viewsets.ModelViewSet):
+    """
+    Вывод списка всех колонок + функционал ModelViewSet
+    """
+    queryset = Column.objects.all()
+    serializer_class = AllColumnsSerializer
+    permission_classes = [IsAdminUser]
+
+
+class AllBoardsAndColumnsViewSet(viewsets.ModelViewSet):
+    """
+    Вывод списка всех досок с их колонками + функционал ModelViewSet
+    """
+    queryset = BoardAndColumn.objects.all()
+    serializer_class = AllBoardsAndColumnsSerializer
+    permission_classes = [IsAdminUser]
+
+
+class AllTasksViewSet(APIView):
+    serializer_class = AllTasksSerializer
+    permission_classes = [IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        # user = User.objects.filter(id=pk)
-        tasks = self.get_queryset()
-        serializer = TaskSerializer(tasks, many=True)
+        tasks = Task.objects.all()
+        serializer = AllTasksSerializer(tasks, many=True)
         return Response(serializer.data)
-
-    # def retrieve(self, request, *args, **kwargs):
-    #     params = kwargs
-    #     print(params['pk'])
-    #     return Response({})
 
     def post(self, request, *args, **kwargs):
-        task_data = request.data
-        print(task_data['task_creation_date'])
-        new_task = Task.objects.create(
-            board_title=task_data['board_title'],
-            task_description=task_data['task_description'],
-            task_creation_date=task_data['task_creation_date'],
-            task_deadline=task_data['task_deadline'])
-        new_task.save()
+        post_data = self.request.data
 
-        serializer = TaskSerializer(new_task)
+        if check_input_data(post_data):
+            new_task = Task.objects.create(
+                user_name=User.objects.get(id=post_data["user_name"]),
+                board_title=Board.objects.get(id=post_data["board_title"]),
+                column_title=Column.objects.get(id=post_data["column_title"]),
+                task_description=post_data["task_description"])
+            new_task.save()
+            serializer = AllTasksSerializer(new_task)
+            return Response(serializer.data)
 
-        return Response(serializer.data)
+
+class MyBoardsView(ListAPIView):
+    serializer_class = AllBoardsSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Board.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        user_name = self.request.user
+        user = User.objects.filter(username=user_name)
+        boards = BoardsAndUsers.objects.filter(user_name=user[0].id)
+        serializer = AllBoardsSerializer(boards, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RetrieveTasksInMyBoardView(ListAPIView):
+    serializer_class = RetrieveTaskSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Task.objects.filter()
+
+    def get(self, request, *args, **kwargs):
+        board = BoardAndColumn.objects.get(id=kwargs['pk'])
+        tasks = Task.objects.filter(board_title_id=board.board_title_id)
+        serializer = RetrieveTaskSerializer(tasks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RetrieveTaskInMyTasks(RetrieveUpdateAPIView):
+    serializer_class = RetrieveTaskSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Task.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        get_object_or_404(BoardAndColumn, id=kwargs['pk'])
+        task = Task.objects.filter(id=kwargs['tk'])
+        serializer = UpdateTaskSerializer(task, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+        task = get_object_or_404(Task, id=kwargs['tk'])
+        print(task.column_title)
+        new_column = get_object_or_404(Column, id=self.request.data['column_title'])
+        task.column_title = new_column
+        print(task.column_title)
+        # task = Task.objects.update(task, column_title=new_column.column_title)
+        task.save()
+        serializer = UpdateTaskSerializer(task)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # def patch(self, request, *args, **kwargs):
