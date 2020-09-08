@@ -1,19 +1,22 @@
 from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets, status
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView, UpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from .models import User, Board, BoardsAndUsers, Column, BoardAndColumn, Task
+
 from .serializers import AllUsersSerializer, AllBoardsSerializer, AllBoardsAndUsersSerializer, AllColumnsSerializer, \
     AllBoardsAndColumnsSerializer, AllTasksSerializer, RetrieveTaskSerializer, UpdateTaskSerializer
-from .services import check_input_data
+
+from .services import check_input_data_in_db
 
 
 class AllUsersViewSet(viewsets.ModelViewSet):
     """
-    Вывод списка всех пользователей + функционал ModelViewSet
+    Вывод списка всех пользователей + функционал CRUD
     """
     queryset = User.objects.all()
     serializer_class = AllUsersSerializer
@@ -22,7 +25,7 @@ class AllUsersViewSet(viewsets.ModelViewSet):
 
 class AllBoardsViewSet(viewsets.ModelViewSet):
     """
-    Вывод списка всех досок + функционал ModelViewSet
+    Вывод списка всех досок + функционал CRUD
     """
     queryset = Board.objects.all()
     serializer_class = AllBoardsSerializer
@@ -31,7 +34,7 @@ class AllBoardsViewSet(viewsets.ModelViewSet):
 
 class AllBoardsAndUsersViewSet(viewsets.ModelViewSet):
     """
-    Вывод списка всех досок с пользователями + функционал ModelViewSet
+    Вывод списка всех досок с пользователями + функционал CRUD
     """
     queryset = BoardsAndUsers.objects.all()
     serializer_class = AllBoardsAndUsersSerializer
@@ -40,7 +43,7 @@ class AllBoardsAndUsersViewSet(viewsets.ModelViewSet):
 
 class AllColumnsViewSet(viewsets.ModelViewSet):
     """
-    Вывод списка всех колонок + функционал ModelViewSet
+    Вывод списка всех колонок + функционал CRUD
     """
     queryset = Column.objects.all()
     serializer_class = AllColumnsSerializer
@@ -49,14 +52,15 @@ class AllColumnsViewSet(viewsets.ModelViewSet):
 
 class AllBoardsAndColumnsViewSet(viewsets.ModelViewSet):
     """
-    Вывод списка всех досок с их колонками + функционал ModelViewSet
+    Вывод списка всех досок с их колонками + функционал CRUD
     """
     queryset = BoardAndColumn.objects.all()
     serializer_class = AllBoardsAndColumnsSerializer
     permission_classes = [IsAdminUser]
 
 
-class AllTasksViewSet(APIView):
+class AllTasksViewSetWithCheckPostData(APIView):
+    queryset = Task.objects.all()
     serializer_class = AllTasksSerializer
     permission_classes = [IsAdminUser]
 
@@ -67,8 +71,8 @@ class AllTasksViewSet(APIView):
 
     def post(self, request, *args, **kwargs):
         post_data = self.request.data
-
-        if check_input_data(post_data):
+        print(post_data)
+        if check_input_data_in_db(post_data) is True:
             new_task = Task.objects.create(
                 user_name=User.objects.get(id=post_data["user_name"]),
                 board_title=Board.objects.get(id=post_data["board_title"]),
@@ -117,13 +121,9 @@ class RetrieveTaskInMyTasks(RetrieveUpdateAPIView):
 
     def put(self, request, *args, **kwargs):
         task = get_object_or_404(Task, id=kwargs['tk'])
-        print(task.column_title)
         new_column = get_object_or_404(Column, id=self.request.data['column_title'])
         task.column_title = new_column
-        print(task.column_title)
-        # task = Task.objects.update(task, column_title=new_column.column_title)
         task.save()
         serializer = UpdateTaskSerializer(task)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # def patch(self, request, *args, **kwargs):
