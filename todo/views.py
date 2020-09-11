@@ -1,5 +1,4 @@
 from django.shortcuts import get_object_or_404
-
 from rest_framework import viewsets, status
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -7,10 +6,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import User, Board, BoardsAndUsers, Column, BoardAndColumn, Task
-
 from .serializers import AllUsersSerializer, AllBoardsSerializer, AllBoardsAndUsersSerializer, AllColumnsSerializer, \
     AllBoardsAndColumnsSerializer, AllTasksSerializer, RetrieveTaskSerializer, UpdateTaskSerializer
-
 from .services import check_input_data_in_db
 
 
@@ -71,7 +68,6 @@ class AllTasksViewSetWithCheckPostData(APIView):
 
     def post(self, request, *args, **kwargs):
         post_data = self.request.data
-        print(post_data)
         if check_input_data_in_db(post_data) is True:
             new_task = Task.objects.create(
                 user_name=User.objects.get(id=post_data["user_name"]),
@@ -81,6 +77,8 @@ class AllTasksViewSetWithCheckPostData(APIView):
             new_task.save()
             serializer = AllTasksSerializer(new_task)
             return Response(serializer.data)
+        else:
+            return Response('Введены неверные данные')
 
 
 class MyBoardsView(ListAPIView):
@@ -126,4 +124,3 @@ class RetrieveTaskInMyTasks(RetrieveUpdateAPIView):
         task.save()
         serializer = UpdateTaskSerializer(task)
         return Response(serializer.data, status=status.HTTP_200_OK)
-

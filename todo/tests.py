@@ -1,86 +1,55 @@
-from django.test import TestCase
+import pytest
+from django.urls import reverse
 
 from .models import User, Board, BoardsAndUsers, Column, BoardAndColumn, Task
 
 
-class BoardTestCase(TestCase):
-    def setUp(self):
-        Board.objects.create(board_title='ТЕСТОВАЯ БОРДА')
-
-    def test_board_str(self):
-        """
-        Тест метода str в модели Board
-        """
-        new_board = Board.objects.get(board_title='ТЕСТОВАЯ БОРДА')
-        self.assertEqual(new_board.__str__(), 'ТЕСТОВАЯ БОРДА')
-        self.assertNotEqual(new_board.__str__(), 'prikoldes')
+@pytest.mark.django_db
+def test_board_create():
+    Board.objects.create(board_title='ТЕСТОВАЯ БОРДА')
+    assert Board.objects.count() == 1
 
 
-class BoardsAndUsersTestCase(TestCase):
-    def setUp(self):
-        User.objects.create(username='test', email='test@m.ru', password='test')
-        Board.objects.create(board_title='ТЕСТОВАЯ БОРДА')
-
-    def test_boards_and_users_create(self):
-        """
-        Тест создания модели BoardsAndUsers
-        """
-        new_user = User.objects.get(username='test')
-        new_board = Board.objects.get(board_title='ТЕСТОВАЯ БОРДА')
-        new_board_and_user = BoardsAndUsers.objects.create(user_name=new_user, board_title=new_board)
-        self.assertEqual(str(new_board_and_user.user_name), 'test')
-        self.assertEqual(str(new_board_and_user.board_title), 'ТЕСТОВАЯ БОРДА')
+@pytest.mark.django_db
+def test_board_and_user_create():
+    user = User.objects.create(username='test', email='test@m.ru', password='test')
+    board = Board.objects.create(board_title='ТЕСТОВАЯ БОРДА')
+    BoardsAndUsers.objects.create(user_name=user, board_title=board)
+    assert BoardsAndUsers.objects.count() == 1
 
 
-class ColumnTestCase(TestCase):
-    """
-    Тест создания модели Column
-    """
-
-    def setUp(self):
-        Column.objects.create(column_title='ТЕСТОВАЯ КОЛОНКА')
-
-    def test_boards_and_users_create(self):
-        """
-        Тест создания модели Column
-        """
-        new_column = Column.objects.get(column_title='ТЕСТОВАЯ КОЛОНКА')
-        self.assertEqual(new_column.column_title, 'ТЕСТОВАЯ КОЛОНКА')
+@pytest.mark.django_db
+def test_column_create():
+    Column.objects.create(column_title='ТЕСТОВАЯ КОЛОНКА')
+    assert Column.objects.count() == 1
 
 
-class BoardAndColumnTestCase(TestCase):
-    def setUp(self):
-        Board.objects.create(board_title='ТЕСТОВАЯ БОРДА')
-        Column.objects.create(column_title='ТЕСТОВАЯ КОЛОНКА')
-
-    def test_boards_and_users_create(self):
-        """
-        Тест создания модели BoardAndColumn
-        """
-        new_board = Board.objects.get(board_title='ТЕСТОВАЯ БОРДА')
-        new_column = Column.objects.get(column_title='ТЕСТОВАЯ КОЛОНКА')
-        new_board_and_column = BoardAndColumn.objects.create(board_title=new_board, column_title=new_column)
-        self.assertEqual(str(new_board_and_column.board_title), 'ТЕСТОВАЯ БОРДА')
-        self.assertEqual(str(new_board_and_column.column_title), 'ТЕСТОВАЯ КОЛОНКА')
+@pytest.mark.django_db
+def test_board_and_column_create():
+    board = Board.objects.create(board_title='ТЕСТОВАЯ БОРДА')
+    column = Column.objects.create(column_title='ТЕСТОВАЯ КОЛОНКА')
+    BoardAndColumn.objects.create(board_title=board, column_title=column)
+    assert BoardAndColumn.objects.count() == 1
 
 
-class TaskTestCase(TestCase):
-    def setUp(self):
-        User.objects.create(username='test', email='test@m.ru', password='test')
-        Board.objects.create(board_title='ТЕСТОВАЯ БОРДА')
-        Column.objects.create(column_title='ТЕСТОВАЯ КОЛОНКА')
+@pytest.mark.django_db
+def test_task_create():
+    new_user = User.objects.create(username='test', email='test@m.ru', password='test')
+    new_board = Board.objects.create(board_title='ТЕСТОВАЯ БОРДА')
+    new_column = Column.objects.create(column_title='ТЕСТОВАЯ КОЛОНКА')
+    Task.objects.create(user_name=new_user, board_title=new_board, column_title=new_column, task_description='new des')
+    assert Task.objects.count() == 1
 
-    def test_boards_and_users_create(self):
-        """
-        Тест создания модели Task
-        """
-        new_user = User.objects.get(username='test')
-        new_board = Board.objects.get(board_title='ТЕСТОВАЯ БОРДА')
-        new_column = Column.objects.get(column_title='ТЕСТОВАЯ КОЛОНКА')
-        new_task = Task.objects.create(user_name=new_user, board_title=new_board, column_title=new_column,
-                                       task_description='new des')
 
-        self.assertEqual(str(new_task.user_name), 'test')
-        self.assertEqual(str(new_task.board_title), 'ТЕСТОВАЯ БОРДА')
-        self.assertEqual(str(new_task.column_title), 'ТЕСТОВАЯ КОЛОНКА')
-        self.assertEqual(str(new_task.task_description), 'new des')
+@pytest.mark.django_db
+def test_task_view(client):
+    url = reverse('tasks')
+    response = client.get(url)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_my_boards_view(admin_client):
+    url = reverse('my-boards')
+    response = admin_client.get(url)
+    assert response.status_code == 200
