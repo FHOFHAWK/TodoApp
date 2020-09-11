@@ -42,9 +42,9 @@ def test_task_create():
 
 
 @pytest.mark.django_db
-def test_task_view(client):
+def test_task_view(admin_client):
     url = reverse('tasks')
-    response = client.get(url)
+    response = admin_client.get(url)
     assert response.status_code == 200
 
 
