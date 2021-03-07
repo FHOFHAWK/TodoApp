@@ -27,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-a = 'eto lol'
 
 # Application definition
 
